@@ -1,0 +1,5 @@
+- add light sensor (optional)
+- make option to measure temperature and humidity only every ten minutes (not for now, energy saving at the moment no priority
+	(only every minute if request checking is set to every minute, otherwise 10 minutes to make averages)
+- synchronize clock once a day (not sure if it now works)
+- problem with morning watering (?)
