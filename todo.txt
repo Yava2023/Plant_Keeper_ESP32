@@ -3,3 +3,4 @@
 	(only every minute if request checking is set to every minute, otherwise 10 minutes to make averages)
 - synchronize clock once a day (not sure if it now works)
 - problem with morning watering (?)
+- make watering time changeable from bot functionality

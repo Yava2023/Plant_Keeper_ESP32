@@ -24,7 +24,7 @@ WiFiClientSecure client;
 UniversalTelegramBot bot(botToken, client);
 
 //define parameters for usage
-const int water_duration = 2000; //time for which the pump is activated each time the plant is watered
+const int water_duration = 1500; //time for which the pump is activated each time the plant is watered
 const int day_start = 9; //setting day time (atm not really needed as light sensor not integrated)
 const int day_end = 16;
 
@@ -39,6 +39,7 @@ int temp_upper_limit = 25; //setting optimal temperature window for plant
 int temp_lower_limit = 18;
 int hum_upper_limit = 80; //setting optimal humidity window for plant
 int hum_lower_limit = 40;
+bool daily_water_mode = true; // activated daily watering by default
 int watering_time = 7; //time when the plant is watered every day
 
 //initialize variables
@@ -76,6 +77,7 @@ String welcome = ""; //variable for welcome message
 String status_report = ""; //variable for status report
 String calibration_mode_string = "true"; //save the state of the calibration mode in a string to print
 String temp_humi_warning_string = "true"; //save the state of the temp_humi_warning mode in a string to print
+String daily_water_mode_string = "activated"; //save the state of the daily watering in a string to print
 String start_message = ""; //message to be displayed send at start_up
 String range_commands = ""; //message displaying all possible commands to change the variables for the temperature and air humidity range
 //define smileys
@@ -169,8 +171,11 @@ void handleNewRequests(int numNewRequests) {
       welcome += "/dry_limit show current value above which plant is watered\n";
       welcome += "/set_dry_limit_NEWVALUE set a new value above which the the plant is watered\n";
       welcome += "/water Manually activate the watering.\n";
+      welcome += "/daily_watering activate/deactivate the daily watering at the set time\n";
+      welcome += "/daily_watering_time show time at which the plan is watered once every day\n";
+      welcome += "/set_daily_watering_NEWVALUE set the daily watering time (in hours)\n";
       welcome += "/temp_humi_warning Activate/deactivate the warnings for temperature and air humidity.\n";
-      welcome += "/warning_range change the optimal temperature and humidity range";
+      welcome += "/warning_range show commands to change the optimal temperature and humidity range";
       bot.sendMessage(userID, welcome, "");
     }
     //execute commands of the user
@@ -230,6 +235,26 @@ void handleNewRequests(int numNewRequests) {
       if (new_value != 9999) {
         dry_limit = new_value;
         bot.sendMessage(userID, "New value above which the plant is watered: " + String(dry_limit), "");
+      }
+    }
+    else if (text == "/daily_watering") {
+      daily_water_mode = !daily_water_mode;
+      if (daily_water_mode) {
+        daily_water_mode_string = "activated";
+      }
+      else if (!daily_water_mode) {
+        daily_water_mode_string = "deactivated";
+      }
+      bot.sendMessage(userID, "Daily watering at the set time is now " + daily_water_mode_string + ".\n The plant will be watered every day at: " + String(watering_time) + ":00.", "");
+    }
+    else if (text == "/daily_watering_time") {
+      bot.sendMessage(userID, "Currently set time when the plant is watered: " + String(watering_time) + ":00", "");
+    }
+    else if (text.startsWith("/set_daily_watering_")) {
+      new_value = extract_int_command(text, "/set_daily_watering_");
+      if (new_value != 9999 && new_value < 25) {
+        watering_time = new_value;
+        bot.sendMessage(userID, "New time at which the plant is watered daily: " + String(watering_time) + ":00", "");
       }
     }
     else if (text == "/water") {
@@ -411,6 +436,16 @@ void print_initialized_values() {
   Serial.print(dry_limit);
   Serial.println(". Please adjust this value to your personal needs.\n");
   Serial.println("Calibration mode: " + calibration_mode_string);
+  if(daily_water_mode){
+    start_message += "The plant is watered daily at " + String(watering_time) + ":00.";
+    Serial.print("The plant is watered daily at ");
+    Serial.print(watering_time);
+    Serial.println(":00.");
+  }
+  else {
+    start_message += "The daily plant watering is currently deactivated.";
+    Serial.println("The daily plant watering is currently deactivated.");
+  }
   start_message += "Calibration mode: " + calibration_mode_string + "\n\n";
   start_message += "For more information on the available commands send /start.";
 }
